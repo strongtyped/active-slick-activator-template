@@ -1,0 +1,178 @@
+<!-- <html> -->
+<head>
+    <title>ActiveSlick</title>
+</head>
+<body>
+
+    <div>
+        <h2>ActiveSlick</h2>
+        <p>
+            This tutorial will teach you how to use the <a href="https://github.com/strongtyped/active-slick" target="_blank">ActiveSlick</a> library. 
+            With <strong>ActiveSlick</strong> you can easily create Repositories or DAOs, enrich your model classes with basic methods to manage the object lifecyle and implement the Active Record pattern for
+            mapped classes.
+        </p>
+        
+        <p>
+            <a href="http://slick.typesafe.com/" target="_blank">Slick</a> is able to map result sets to case classes or Tuples because of its isomorphism. 
+            This is done thanks to built-in Scala features. However, there is no direct link between case class fields and database columns. 
+            Everything is done based on isomorphic projections.
+        </p>
+
+        <p>
+            As a consequence, Entity management must be done by hand, over and over again. 
+            One needs to save a Entity, ask Slick to return the generated ID and add it explicitly to the case class. 
+            The example bellow demonstrates how it is typically done in a Slick application.
+            <a href="#code/examples/tutorial/ManagingIdsByHand.scala" class="shortcut">ManagingIdsByHand.scala</a> 
+        </p>
+
+        <p>
+            From lines 24 to 28 we can see how <strong>Foo</strong> is intialised and persisted.
+            Once persisted we must explicitly ask Slick for the generated ID and add it to the case class.
+        </p>
+        
+        <p>Let's move forward and see how we can reduce this boilerplace.</p>
+    </div>
+
+    <div>
+        <h2>The Identifiable trait</h2>
+
+        <p>
+            We will start by having a look on the <a href="#code/examples/tutorial/Identifiable.scala" class="shortcut">Identifiable</a> trait.
+        </p>
+        <p>
+            This trait is provided by <strong>ActiveSlick</strong> and gives you the possiblity to define a model with a well-known ID.
+            <br/>
+            
+        </p>
+        <h3>Things to note:</h3>
+        <p>
+            <ul>
+                <li>The Id type is defined in a type alias instead of a type parameter (later on we'll see why this is needed).</li>
+                <li>It needs a self-type to ensure that <strong>withId</strong> method will return the same Identifiable</li>
+            </ul>
+        </p>
+
+        <h3>The Player model</h3>
+        <p>
+            The next step is to define a model that implements <strong>Identifiable</strong>. 
+        </p>
+        <p>
+            The <a href="#code/app/models/Player.scala" class="shortcut">Player</a> model is very simple. It defines the player's name and an Id of type <strong>Int</strong>.
+        </p> 
+        <p>
+            Note that <strong><code>def id:Option[E#Id]</code></strong> is overwritten as a constructor parameter <code>id:Option[Int]</code></strong> and has <strong>None</strong> as its default value. And it's the last parameter in the constructor.
+        </p>
+        <p>
+            This is very important, because it'll allow us to initialise a Player without passing an Id. For instance, 
+            <pre><code>// not yet persisted Player
+val player = Player("Pelé")</code></pre>
+        </p>
+    </div>
+
+    <div>
+        <h2>Mapping with ActiveSlick</h2>
+        <p>
+            <strong>ActiveSlick</strong> has provide some Slick Table extensions that are aware of Entities Ids and versioning (optimistic locking). Those are defined on the <a href="#code/examples/tutorial/Tables.scala" class="shortcut">Tables</a> trait. 
+        </p>
+        <p>
+            There are basic two tables, the <strong>IdTable</strong> and the <strong>IdVersionTable</strong>. 
+            Contrary to the default <strong>Slick Table</strong>, that only requires one type parameter, the <strong>ActiveSlick</strong> requires you to define the type of your model (<code>M</code>) and the type of its Id (<code>I</code>). <strong>IdTable</strong>  also forces you to define a <strong><code>def id:Column[I]</code></strong>.
+        </p>
+        <p>
+            Noteworthy is the present of a implicit parameter of <strong>BaseColumnType[I]</strong>.
+        </p>
+        <p>
+            Slick needs a implicit <strong>BaseColumnType</strong> for each type used in a <strong>Column</strong> definition. In our case, since the type is not yet defined we must let the 'door open' so the right <strong>BaseColumnType</strong> is picked and passed through once we have a concrete type.
+        </p>
+        
+        <h3>The Player's Table</h3>
+        <p>
+            To map the <a href="#code/app/models/Player.scala" class="shortcut">Player</a>  we'll use  the <a href="#code/examples/tutorial/Tables.scala" class="shortcut">EntityTable</a> which is a type alias for models implementing the <a href="#code/examples/tutorial/Identifiable.scala" class="shortcut">Identifiable</a> trait.
+        </p>
+        <p>
+            The Player's table is defined in the <a href="#code/app/components/Schema.scala" class="shortcut">Schema</a> trait.
+        </p>
+        <p>
+            If your model implements the <strong>Identifiable</strong> trait, you can chose for the <strong>EntityTable</strong> instead of <strong>IdTable</strong>. The <strong>IdTable</strong> will require your to define both the type of your model 
+            and the type of your Id.
+        </p>
+        <p>
+            Basically, <strong>EntityTable</strong> is a <strong>IdTable</strong> for <strong>Identifiables</strong> where the Id type is selected via the type projection Identifiable#Id.
+        </p>
+
+    </div>
+
+    <div>
+        <h2>Enabling the Active Record</h2>
+        <p>
+            Once we have our model and table mapping we can define a <strong>TableQuery</strong> and a <strong>Active Record</strong> extension.</p>
+        <p>
+            Again, <strong>ActiveSlick</strong> defines different <strong>TableQueries</strong> that builds on top of Slick's TableQuery and adds some generic functionality.
+        </p>
+        <p>
+            For the <a href="#code/app/components/PlayerExtensions.scala" class="shortcut">Player Extensions</a> we'll choose <strong>IdentifiableTableQuery</strong> which is of course a <strong>TableQuery</strong> for <strong>Identifiables</strong>.
+        </p>
+
+        <p>
+            We also define a implicit class extensions for the <strong>Player</strong> model that will add methods like a 'save'/'trySave' and 'delete'/'tryDelete' to it.
+            <pre><code>// persisting a Player using the ActiveRecord extension
+val playerWithId = Player("Pelé").save</code></pre>
+        </p>
+        
+    </div>
+
+    <div>
+        <h2>Wiring everything in a Cake</h2>
+        <p>
+            As you probably noticed, <strong>ActiveSlick</strong> requires us to define our mappings and TableQueries using the Cake Pattern. 
+        </p>
+        <p>
+            The Cake Pattern is specially needed in our case because many of the Slick classes and traits needed to enable the mappings in <strong>ActiveSlick</strong> are only available when a <strong>Profile</strong> is defined. Therefore, we most added all our components in a cake and define the <strong>Profile</strong> as the last step.
+        </p>
+
+        <p>
+            The <a href="#code/app/components/ActiveSlickCake.scala"  class="shortcut">ActiveSlickCake</a> is a component that wires everything togehter and define the profile using the <a href="https://github.com/playframework/play-slick" target="_blank">play-slick</a> plugin for Play!   
+        </p>
+
+        <h3>The Cake Layers</h3>
+        <p>
+            We have the following pieces in this cake:
+            <ul>
+                <li>ActiveSlick trait - basic trait that brings in all ActiveSlick goodies (Tables, TableQueries, ActiveRecordExtentions)</li>
+                <li>The Schema - our own table mappings</li>
+                <li>PlayerExtensions - define the Player TableQuery and its Active Record extensions </li>
+            </ul>
+        </p>
+        
+    </div>
+
+    <div>
+        <h2>Integrating with Play!</h2>
+        <p>
+            To integration <strong>ActiveSlick</strong> with Play! we'll use the <a href="https://github.com/playframework/play-slick" target="_blank">play-slick</a> plugin.
+        </p>
+        <p>
+            The <strong>Profile</strong> required by the <strong>ActiveSlickCake</strong> will be provided by the <strong>play-slick</strong> plugin via <strong>play.api.db.slick.Config.driver</strong>. The driver is configured in the <a href="#code/conf/application.conf" class="shortcut">application.conf</a> as usual.
+            
+        <p>
+            The application.conf also contains the necessary configuration to load the DDL into the in-memory DB.
+            (see slick.default property). This will generated the necessary evolution script directly 
+            from the Players table. 
+        </p>
+        </p>
+        <h3>The PlayerController</h3>
+        <p>
+            The <a href="#code/app/controllers/PlayerController.scala"  class="shortcut">PlayerController</a> illustrates how you can use your newly Active Record Pattern enabled Slick model in a Play! application.
+        </p>
+        <h3>Things to note:</h3>
+        <p>
+            <ul>
+                <li>The ActiveSlick Cake is imported via <code>import components.ActiveSlickCake.cake._</code></li>
+                <li>We use the 'try' method on each operation with the database. <strong>ActiveSlick</strong> will make sure that the transaction is rolled back whenever a Failure is returned.</li>
+                <li>This application offers an API only interface. You can add new Players using a REST client. Check this short <a href="#code/examples/tutorial/api-readme.md" class="shortcut">api-readme</a> file for the API description.</li>
+                <li>Some Players are added on application start (see <a href="#code/app/Global.scala" class="shortcut">Global</a>)</li>
+            </ul>
+        </p>
+    </div>
+</body>
+</html>
