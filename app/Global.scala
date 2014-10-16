@@ -9,7 +9,7 @@ object Global extends GlobalSettings {
     super.onStart(app)
     play.api.db.slick.DB.withTransaction { implicit session =>
       // adding some players
-      val players = Player("PlayerOne") :: Player("PlayerTwo") :: Player("PlayerThree") :: Nil
+      val players = Player("Pelé") :: Player("Maradona") :: Player("Zico") :: Nil
       players.foreach(_.save)
     }
   }
