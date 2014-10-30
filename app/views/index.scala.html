@@ -1,7 +1,41 @@
 @(message: String)
 
-@main("Welcome to Play") {
+@main("Welcome to ActiveSlick") {
 
-    @play20.welcome(message)
+	This application offers an API only interface. <br/>
+	You can execute all CRUD operation using the api bellow.
+	<br/>
 
+	<h2>API documention</h2>
+
+	<h3>adding new players</h3>
+	<p>
+	    POST to http://localhost:9000/player <br/>
+	    with payload { "name": "player-name" }
+	</p>
+	<hr/>
+	<h3>getting a player</h3>
+	<p>
+	    GET on http://localhost:9000/player/$id<br/>
+	    where $id correspond to the player's id
+	</p>
+	<hr/>
+	<h3>getting all players</h3>
+	<p>
+	    GET on http://localhost:9000/player    
+	</p>
+	<hr/>
+	<h3>updating a player</h3>
+	<p>
+	    PUT on http://localhost:9000/player/$id<br/>
+	    with payload { "name": "player-name", "id": $id }<br/>
+	    where $id correspond to the player's id
+	</p>
+	<hr/>
+	<h3>deleting new players</h3>
+	<p>
+	    DELETE on http://localhost:9000/player/$id<br/>
+	    where $id correspond to the player's id    
+	</p>
+   
 }

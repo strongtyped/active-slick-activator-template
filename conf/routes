@@ -3,6 +3,7 @@
 # ~~~~
 
 # Home page
+GET     /			                          controllers.PlayerController.api
 GET     /player		                          controllers.PlayerController.list
 GET     /player/:id                           controllers.PlayerController.get(id:Int)
 POST    /player                           	  controllers.PlayerController.create
