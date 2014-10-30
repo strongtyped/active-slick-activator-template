@@ -13,6 +13,10 @@ object PlayerController extends Controller {
 
   implicit val playerFormat = Json.format[Player]
 
+  def api = Action {
+    Ok(views.html.index("Your new application is ready."))
+  }
+
   def list = DBAction { implicit rs =>
   	val allPlayers = Players.fetchAll
     Ok(Json.toJson(allPlayers))
